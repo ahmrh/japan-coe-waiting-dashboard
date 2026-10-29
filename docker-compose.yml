@@ -1,0 +1,29 @@
+services:
+  backend:
+    image: python:3.12-slim
+    working_dir: /app/backend
+    command: sh -c "pip install --no-cache-dir -r requirements.txt && uvicorn app.main:app --host 0.0.0.0 --port 8000"
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: sqlite:////data/coe_dashboard.sqlite3
+      ESTAT_REFRESH_INTERVAL_HOURS: 24
+    volumes:
+      - ./backend:/app/backend
+      - coe-data:/data
+  frontend:
+    image: node:20-alpine
+    working_dir: /app/frontend
+    command: sh -c "npm install && npm run dev -- --host 0.0.0.0"
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_PROXY: http://backend:8000
+    volumes:
+      - ./frontend:/app/frontend
+      - frontend-modules:/app/frontend/node_modules
+    depends_on:
+      - backend
+volumes:
+  coe-data:
+  frontend-modules:

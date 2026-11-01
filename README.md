@@ -48,6 +48,31 @@ Stop with `Ctrl+C` or `docker compose down`. Stored statistics remain in the
 Docker volume. Run `docker compose down --volumes` only if you also want to
 remove that stored data.
 
+## Deploy on Render
+
+The app can run as two Render services: a static site for the frontend and a
+web service for the backend. Push this repository to GitHub, then create both
+services from the Render dashboard.
+
+For the backend web service, set the root directory to `backend`, the build
+command to `pip install -r requirements.txt`, and the start command to
+`uvicorn app.main:app --host 0.0.0.0 --port $PORT`. Choose the Free instance
+plan and set `ESTAT_REFRESH_INTERVAL_HOURS` to `24`.
+
+For the frontend static site, set the root directory to `frontend`, the build
+command to `npm ci && npm run build`, and the publish directory to `dist`. Set
+`VITE_API_BASE_URL` to the backend's `https://...onrender.com` URL, without a
+trailing slash.
+
+After creating the frontend, set `FRONTEND_ORIGIN` on the backend to the
+frontend's `https://...onrender.com` URL and redeploy the backend. The backend
+also permits the local development origins.
+
+Render's Free web services sleep after inactivity, and their local files are
+ephemeral. The SQLite database can be lost when the backend restarts or sleeps;
+the app will attempt to fetch and rebuild its data from e-Stat when it starts.
+Allow extra time for the first request after it wakes.
+
 ## Refresh and verify data
 
 The service checks the official source at startup, when a dashboard session
